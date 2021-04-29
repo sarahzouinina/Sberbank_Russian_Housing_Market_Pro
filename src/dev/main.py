@@ -4,16 +4,16 @@ np.set_printoptions(suppress=True)
 from src.sberbank_analysis.data_preprocessing import preprocessing_steps
 from src.sberbank_analysis.feature_engineering import feature_selector
 from sklearn.preprocessing import StandardScaler
+from src.sberbank_analysis.data_training import loading
 from src.sberbank_analysis.data_training import lgbm
 
 ################# Load Data ##############
-pd.set_option('display.max_columns', None)
-train = pd.read_csv("data/train.csv")
-test = pd.read_csv("data/test.csv")
+ld = loading.Loader()
+train = ld.load_data("data/train.csv")
+test = ld.load_data("data/test.csv")
 df_test = test
 df_train = train
-
-np.random.seed(0)
+ld.display_head(train)
 ################## Preprocessing ######################
 
 pr = preprocessing_steps.Preprocessor()
