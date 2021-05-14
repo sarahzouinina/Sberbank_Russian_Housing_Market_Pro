@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+from sklearn.model_selection import cross_val_score
+
 np.set_printoptions(suppress=True)
 from src.sberbank_analysis.data_preprocessing import preprocessing_steps
 from src.sberbank_analysis.feature_engineering import feature_selector
@@ -7,65 +9,64 @@ from sklearn.preprocessing import StandardScaler
 from src.sberbank_analysis.data_training import loading
 from src.sberbank_analysis.data_training import lgbm
 
-################# Load Data ##############
-ld = loading.Loader()
-train = ld.load_data("data/train.csv")
-test = ld.load_data("data/test.csv")
-df_test = test
-df_train = train
-ld.display_head(train)
-################## Preprocessing ######################
+if __name__ == "__main__":
 
-pr = preprocessing_steps.Preprocessor()
-pr.fit(train)
-train = pr.transform(train)
-test = pr.transform(test)
+    ################# Load Data ##############
+    ld = loading.Loader()
+    train = ld.load_data("data/train.csv")
+    test = ld.load_data("data/test.csv")
+    df_test = test.copy()
+    df_train = train.copy()
+    ld.display_head(train)
+    ################## Preprocessing ######################
 
-
-print(train.head())
-print(test.head())
+    pr = preprocessing_steps.Preprocessor()
+    pr.fit(train)
+    train = pr.transform(train)
+    test = pr.transform(test)
 
 
-################## Correlation ###########################
+    print(train.head())
+    print(test.head())
 
-cc = feature_selector.Correlation_Checker()
-train, test = cc.transform(train, test)
-print(train.shape)
-print(test.shape)
-################## X_train, y_train ###############################
-X_train = train.drop(['price_doc'], axis = 1)
-y_train = train['price_doc']
-X_test = test
 
-sc = StandardScaler()
-X_train, X_test = sc.fit_transform(X_train), sc.fit_transform(X_test)
+    ################## Correlation ###########################
 
-################## Target Engineering ####################
+    cc = feature_selector.Correlation_Checker()
+    train, test = cc.transform(train, test)
+    print(train.shape)
+    print(test.shape)
+    ################## X_train, y_train ###############################
+    X_train = train.drop(['price_doc'], axis = 1)
+    y_train = train['price_doc']
+    X_test = test.copy()
 
-y_train = np.log10(y_train)
+    ################## Target Engineering ####################
 
-################# Building the Model ####################
+    y_train = np.log10(y_train)
 
-# RMSE = 0.40010
-lgb_params = {
-    "objective": "regression",
-    "metric": "rmse",
-    'learning_rate': 0.3777518392924809,
-    'sub_feature': 0.5424987750103974,
-    'max_depth': 94,
-    'colsample_bytree': 0.9,
-    'num_leaves': 194,
-    "bagging_seed": 42,
-    'min_data': 31,
-    "verbosity": 1,
-    "seed": 42
-}
+    ################# Building the Model ####################
 
-model = lgbm.LGBMRegressor(lgb_params, early_stopping_rounds = 150, test_size = 0.25, verbose_eval = 100, nrounds = 100, enable_cv = True)
-model.fit(X_train, y_train)
-y_pred = model.predict(X_test)
-transformed_y_pred = 10 ** y_pred
-# Submitting the file
-my_submission = pd.DataFrame({'id': df_test.id, 'price_doc': transformed_y_pred})
-# you could use any filename. We choose submission here
-my_submission.to_csv('predictions/submission_100_rounds.csv', index=False) # With cross val RMSE = 0.40070
+    # RMSE = 0.40010
+    lgb_params = {
+        "objective": "regression",
+        "metric": "rmse",
+        'learning_rate': 0.001,
+        'sub_feature': 0.5424987750103974,
+        'max_depth': 94,
+        'colsample_bytree': 0.9,
+        'num_leaves': 194,
+        "bagging_seed": 42,
+        'min_data': 31,
+        "verbosity": 1,
+        "seed": 42
+    }
+    
+    model = lgbm.LGBMRegressor(lgb_params, early_stopping_rounds = 150, test_size = 0.25, verbose_eval = 100, nrounds = 5000, enable_cv = True)
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+    transformed_y_pred = 10 ** y_pred
+    # Submitting the file
+    my_submission = pd.DataFrame({'id': df_test.id, 'price_doc': transformed_y_pred})
+    # you could use any filename. We choose submission here
+    my_submission.to_csv('predictions/submission_5000_rounds_lr_0.001.csv', index=False) # With cross val RMSE = 0.32543

@@ -98,7 +98,7 @@ class AbstractLGBMWrapper(ABC, BaseEstimator):
             dtrain = lgb.Dataset(X, label=y)
             watchlist = [dtrain]
 
-            print("    Cross-validating LightGBM with seed: " + str(self.random_state) + "...")
+            print(" Cross-validating LightGBM with seed: " + str(self.random_state) + "...")
             # If we deal with a regression problem, disable stratified split
             if ("application" in self.params and self.params["application"] == "regression") or (
                     "objective" in self.params and self.params["objective"] == "regression"):

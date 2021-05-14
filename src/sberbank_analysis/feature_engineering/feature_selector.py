@@ -3,13 +3,13 @@ from sklearn.base import TransformerMixin, BaseEstimator
 class Correlation_Checker(TransformerMixin, BaseEstimator):
     def __init__(self):
         """
-            Parameters
-            ----------
-            None
-            Attributes
-            ----------
-            None
-            """
+        Parameters
+        ----------
+        None
+        Attributes
+        ----------
+        None
+        """
 
     def fit(self, X, y=None):
         """A reference implementation of a fitting function for a transformer.
