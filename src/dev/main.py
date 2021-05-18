@@ -5,16 +5,16 @@ from sklearn.model_selection import cross_val_score
 np.set_printoptions(suppress=True)
 from src.sberbank_analysis.data_preprocessing import preprocessing_steps
 from src.sberbank_analysis.feature_engineering import feature_selector
-from sklearn.preprocessing import StandardScaler
 from src.sberbank_analysis.data_training import loading
 from src.sberbank_analysis.data_training import lgbm
+from src.sberbank_analysis.data_training.files_paths import *
+
 
 if __name__ == "__main__":
 
     ################# Load Data ##############
     ld = loading.Loader()
-    train = ld.load_data("data/train.csv")
-    test = ld.load_data("data/test.csv")
+    train, test = ld.load_data(TRAINING_DATA_str, TESTING_DATA_str)
     df_test = test.copy()
     df_train = train.copy()
     ld.display_head(train)
@@ -24,7 +24,6 @@ if __name__ == "__main__":
     pr.fit(train)
     train = pr.transform(train)
     test = pr.transform(test)
-
 
     print(train.head())
     print(test.head())
@@ -43,7 +42,7 @@ if __name__ == "__main__":
 
     ################## Target Engineering ####################
 
-    y_train = np.log10(y_train)
+    y_train = np.log1p(y_train)
 
     ################# Building the Model ####################
 
@@ -65,8 +64,8 @@ if __name__ == "__main__":
     model = lgbm.LGBMRegressor(lgb_params, early_stopping_rounds = 150, test_size = 0.25, verbose_eval = 100, nrounds = 5000, enable_cv = True)
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
-    transformed_y_pred = 10 ** y_pred
+    transformed_y_pred = np.expm1(y_pred)
     # Submitting the file
     my_submission = pd.DataFrame({'id': df_test.id, 'price_doc': transformed_y_pred})
     # you could use any filename. We choose submission here
-    my_submission.to_csv('predictions/submission_5000_rounds_lr_0.001.csv', index=False) # With cross val RMSE = 0.32543
+    my_submission.to_csv(r'C:\Users\SarahZOUININA\Documents\GitHub\Sberbank_Russian_Housing_Market_Pro\predictions\submission_5000_rounds_lr_0.01.csv', index=False) # With cross val RMSE = 0.32543
