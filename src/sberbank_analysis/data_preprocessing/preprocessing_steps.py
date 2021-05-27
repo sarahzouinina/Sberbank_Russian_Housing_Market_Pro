@@ -29,11 +29,18 @@ class Preprocessor(TransformerMixin, BaseEstimator):
         -------
         None
         """
+        # Get features with NA
+        # self.features_with_na = [feature for feature in X.columns if X[feature].isnull().sum() > 1]
+        #
+        # # Get categorical features
+        # self.categorical_features = [feature for feature in X.columns if X[feature].dtype == 'O']
+        #
+        # # Get numerical features
+        # self.numerical_features = [feature for feature in X.columns if X[feature].dtype != 'O']
         return self
 
     def transform(self, X):
         print("Preprocessing data...")
-
         # Get features with NA
         features_with_na = [feature for feature in X.columns if X[feature].isnull().sum() > 1]
 

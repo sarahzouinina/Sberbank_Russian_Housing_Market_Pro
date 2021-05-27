@@ -1,3 +1,16 @@
+###############################################################################
+# Sberbank Russian Housing Market Challenge                                   #
+#                                                                             #
+# This is the entry point of the solution.                                    #
+# Developped using Python 3.8.                                                #
+#                                                                             #
+# Author: Sarah Zouinina                                                      #
+# e-mail: sarahzouinina1@gmail.com                                            #
+# Date: 2021-05-10                                                            #
+# Version: 1.0.0                                                              #
+###############################################################################
+
+
 from sklearn.base import TransformerMixin, BaseEstimator
 
 class Correlation_Checker(TransformerMixin, BaseEstimator):

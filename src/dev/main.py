@@ -1,20 +1,32 @@
 import pandas as pd
 import numpy as np
+import logging
+import sys
 from sklearn.model_selection import cross_val_score
 
 np.set_printoptions(suppress=True)
 from src.sberbank_analysis.data_preprocessing import preprocessing_steps
 from src.sberbank_analysis.feature_engineering import feature_selector
-from sklearn.preprocessing import StandardScaler
-from src.sberbank_analysis.data_training import loading
+from src.sberbank_analysis.data_training import loading, auto_tuner
 from src.sberbank_analysis.data_training import lgbm
+from src.sberbank_analysis.data_training.file_paths import *
+from custom_logging import CustomLogger # CHECK THAT PATH IS OK!
+from datetime import datetime
+from hyperopt import hp
+
 
 if __name__ == "__main__":
+    # Logger
+    current_date = datetime.today().strftime("%d%m%Y")
+    file_handler = logging.FileHandler(
+        filename= "logs/" + "WholePipeline_LGBM_test_" + current_date + ".txt", mode="w",
+        encoding="utf-8")
+    sys.stdout = CustomLogger(sys.stdout, file_handler, "WholePipeline_LGBM_test.py")
+    sys.stderr = CustomLogger(sys.stderr, file_handler, "stderr")
 
     ################# Load Data ##############
     ld = loading.Loader()
-    train = ld.load_data("data/train.csv")
-    test = ld.load_data("data/test.csv")
+    train, test = ld.load_data(TRAINING_DATA_str, TESTING_DATA_str)
     df_test = test.copy()
     df_train = train.copy()
     ld.display_head(train)
@@ -43,30 +55,46 @@ if __name__ == "__main__":
 
     ################## Target Engineering ####################
 
-    y_train = np.log10(y_train)
+    y_train = np.log1p(y_train)
 
     ################# Building the Model ####################
+    hyperparameters_dict = {"num_leaves": hp.quniform("num_leaves", 8, 128, 2),
+                            "learning_rate": hp.uniform("learning_rate", 1e-3, 1e-2),
+                            "bagging_fraction": hp.uniform("bagging_fraction", 0.7, 1.0),
+                            "feature_fraction": hp.uniform("feature_fraction", 0.1, 0.5),
+                            "min_split_gain": hp.uniform("min_split_gain", 0.01, 0.1),
+                            "min_child_samples": hp.quniform("min_child_samples", 90, 200, 2),
+                            "min_child_weight": hp.uniform("min_child_weight", 0.01, 0.1)}
 
-    # RMSE = 0.40010
-    lgb_params = {
-        "objective": "regression",
-        "metric": "rmse",
-        'learning_rate': 0.001,
-        'sub_feature': 0.5424987750103974,
-        'max_depth': 94,
-        'colsample_bytree': 0.9,
-        'num_leaves': 194,
-        "bagging_seed": 42,
-        'min_data': 31,
-        "verbosity": 1,
-        "seed": 42
-    }
-    
-    model = lgbm.LGBMRegressor(lgb_params, early_stopping_rounds = 150, test_size = 0.25, verbose_eval = 100, nrounds = 5000, enable_cv = True)
-    model.fit(X_train, y_train)
-    y_pred = model.predict(X_test)
-    transformed_y_pred = 10 ** y_pred
+
+    at = auto_tuner.AutoTuner()
+    results_df = at.tune_model(1000, hyperparameters_dict ,X_train, y_train)
+
+    results_df.to_excel(TUNING_RESULTS_DIR_str + "lgbm_tuning_results.xlsx", index=False)
+
+
+
+
+    # lgb_params = {
+    #     "objective": "regression",
+    #     "metric": "rmse",
+    #     'learning_rate': 0.01,
+    #     'sub_feature': 0.5424987750103974,
+    #     'max_depth': 94,
+    #     'colsample_bytree': 0.9,
+    #     'num_leaves': 194,
+    #     "bagging_seed": 42,
+    #     'min_data': 31,
+    #     "verbosity": 1,
+    #     "seed": 42
+    # }
+    #
+    # model = lgbm.LGBMRegressor(lgb_params, early_stopping_rounds = 150, test_size = 0.25, verbose_eval = 100, nrounds = 5000, enable_cv = True)
+    # model.fit(X_train, y_train)
+    # y_pred = model.predict(X_test)
+
+    #transformed_y_pred = np.expm1(y_pred)
     # Submitting the file
-    my_submission = pd.DataFrame({'id': df_test.id, 'price_doc': transformed_y_pred})
+    #my_submission = pd.DataFrame({'id': df_test.id, 'price_doc': transformed_y_pred})
     # you could use any filename. We choose submission here
-    my_submission.to_csv('predictions/submission_5000_rounds_lr_0.001.csv', index=False) # With cross val RMSE = 0.32543
+    #my_submission.to_csv('predictions/submission_5000_rounds_lr_0.01.csv', index=False) # With cross val RMSE = 0.32543
