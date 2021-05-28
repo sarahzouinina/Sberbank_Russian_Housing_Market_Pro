@@ -16,29 +16,33 @@ from hyperopt import hp, fmin, tpe, Trials
 from sklearn.metrics import mean_squared_error
 import pickle
 from src.sberbank_analysis.data_training.lgbm import LGBMRegressor
-
+import multiprocessing as mp
 
 class AutoTuner(object):
     """
     The purpose of this class is to auto-tune a given machine learning model to increase its performances.
     """
 
-    def __init__(self):
+    def __init__(self, n_jobs = -1):
         """
         Class' constructor
 
         Parameters
         ----------
-        None
+        n_jobs: integer (default = -1)
+            Number of CPU cores to use for model training.
 
         Returns
         -------
         None
         """
+        
+        if n_jobs == -1:
+            self.n_jobs = mp.cpu_count()
+        else:
+            self.n_jobs = n_jobs
 
-        pass
-
-    def _tune_model_helper(self, n_tries, hyperparameters_dict, X_train, y_train):
+    def _tune_model_helper(self, n_tries, model_class, hyperparameters_dict, X_train, y_train, X_test, y_test):
         """
         This method is a helper for model tuning.
 
@@ -47,9 +51,12 @@ class AutoTuner(object):
         n_tries : positive integer
                 Number of different hyperparameter sets to try.
 
+        model_class : Python class
+                Class of the model that will be used as predictive model.
+
         hyperparameters_dict : Python dictionary
                 Dictionary containing hyperparameters to tune and corresponding range.
-
+                
         X_train : Pandas DataFrame
                 This is the data we will use to train the models.
 
@@ -61,32 +68,41 @@ class AutoTuner(object):
 
         y_test : Pandas Series
                 This is the associated target to X_test.
-
+                
         Returns
         -------
         None
         """
 
-        def objective(params):
-            lgb_params = {"num_leaves": hp.quniform("num_leaves", 8, 128, 2),
-                          "learning_rate": hp.uniform("learning_rate", 1e-3, 1e-2),
-                          "bagging_fraction": hp.uniform("bagging_fraction", 0.7, 1.0),
-                          "feature_fraction": hp.uniform("feature_fraction", 0.1, 0.5),
-                          "min_split_gain": hp.uniform("min_split_gain", 0.01, 0.1),
-                          "min_child_samples": hp.quniform("min_child_samples", 90, 200, 2),
-                          "min_child_weight": hp.uniform("min_child_weight", 0.01, 0.1)}
+        def objective(params):                        
+            lgb_params = {"objective": "reg:linear",
+                          "metric": "rmse",
+                          "booster": "gbdt",
+                          "num_leaves": int(params["num_leaves"]),
+                          "max_depth": int(params["max_depth"]),
+                          "learning_rate": params["learning_rate"],
+                          "bagging_freq": int(params["bagging_freq"]),
+                          "feature_fraction": params["feature_fraction"],
+                          "bagging_fraction": params["bagging_fraction"],
+                          "min_child_weight": params["min_child_weight"],
+                          "min_split_gain": params["min_split_gain"],
+                          "min_child_samples": int(params["min_child_samples"]),
+                          "nthread": self.n_jobs}
 
-            lgbm = LGBMRegressor(lgb_params, early_stopping_rounds=150, test_size=0.25, verbose_eval=100,
-                                 nrounds=5000, enable_cv=True)
+            print("Params:", lgb_params)
+
+            my_model = model_class(lgb_params)
 
             # Train the model
-            lgbm.fit(X_train, y_train)
+            my_model.fit(X_train, y_train)
 
             # Make predictions
-            predictions_npa = lgbm.predict(X_eval)
+            predictions_npa = my_model.predict(X_test)
+            predictions_npa = np.expm1(predictions_npa)
 
             # Evaluate the model
-            rmse = mean_squared_error(y_eval, predictions_npa)**0.5
+            rmse = mean_squared_error(y_test, predictions_npa) ** 0.5
+            
             print("RMSE = ", rmse)
 
             return rmse
@@ -98,7 +114,7 @@ class AutoTuner(object):
 
         return best, trials
 
-    def tune_model(self, n_tries, hyperparameters_dict, X_train, y_train):
+    def tune_model(self, n_tries, hyperparameters_dict, model_class, X_train, y_train, X_test, y_test):
         """
         This method tunes a ML model.
 
