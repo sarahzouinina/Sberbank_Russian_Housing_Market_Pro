@@ -31,75 +31,36 @@ if __name__ == "__main__":
     train, test = ld.load_data(TRAINING_DATA_str, TESTING_DATA_str)
     df_test = test.copy()
     df_train = train.copy()
-    ld.display_head(train)
-    
-    
-    ################## Model ##############################
-    
-    #my_model = SberbankModel()
-    #my_model.fit(X_train, y_train)
-    #predictions_npa = my_model.fit(X_test)
-    
-    ################## Preprocessing ######################
-
-    print(train.head())
-    print(test.head())
+    #ld.display_head(train)
 
 
     ################## Correlation ###########################
 
     cc = feature_selector.Correlation_Checker()
     train, test = cc.transform(train, test)
-    print(train.shape)
-    print(test.shape)
+    # print(train.shape)
+    # print(test.shape)
     
     ################## X_train, y_train ###############################
     target = train['price_doc']
     train = train.drop(['price_doc'], axis = 1)
-    y_log_train = np.log1p(target)
+    y_log_target= np.log1p(target)
     
-    X_train, X_test, y_train, y_test = train_test_split(train, target, test_size = 0.20, random_state = 42)
-    
+    X_train, X_test, y_train, y_test = train_test_split(train, y_log_target, test_size = 0.20, random_state = 42)
 
-    ################# Building the Model ####################
+    ################# Tuning the Model ####################
     hyperparameters_dict = {"num_leaves": hp.quniform("num_leaves", 8, 128, 2),
                             "max_depth": hp.quniform("max_depth", 3, 10, 1),
                             "learning_rate": hp.uniform("learning_rate", 1e-3, 1e-2),
                             "bagging_freq": hp.quniform("bagging_freq", 1, 5, 1),
                             "bagging_fraction": hp.uniform("bagging_fraction", 0.7, 1.0),
                             "feature_fraction": hp.uniform("feature_fraction", 0.2, 0.9),
+                            'subsample': hp.uniform('subsample', 0.6, 1),
                             "min_split_gain": hp.uniform("min_split_gain", 0.01, 0.1),
                             "min_child_samples": hp.quniform("min_child_samples", 90, 200, 2),
                             "min_child_weight": hp.uniform("min_child_weight", 0.01, 0.1)}
 
     at = auto_tuner.AutoTuner()
-    results_df = at.tune_model(1000, hyperparameters_dict, SberbankModel, X_train, y_train, X_test, y_test)
+    results_df = at.tune_model(100, hyperparameters_dict, SberbankModel, X_train, y_train, X_test, y_test)
+    results_df.to_csv(TUNING_RESULTS_DIR_str + "\lgbm_tuning_results_no_ordinal.csv", index=False)
 
-    results_df.to_excel(TUNING_RESULTS_DIR_str + "lgbm_tuning_results.xlsx", index=False)
-
-
-
-
-    # lgb_params = {
-    #     "objective": "regression",
-    #     "metric": "rmse",
-    #     'learning_rate': 0.01,
-    #     'sub_feature': 0.5424987750103974,
-    #     'max_depth': 94,
-    #     'colsample_bytree': 0.9,
-    #     'num_leaves': 194,
-    #     "bagging_seed": 42,
-    #     'min_data': 31,
-    #     "verbosity": 1,
-    #     "seed": 42
-    # }
-    #
-    # model = lgbm.LGBMRegressor(lgb_params, early_stopping_rounds = 150, test_size = 0.25, verbose_eval = 100, nrounds = 5000, enable_cv = True)
-    # model.fit(X_train, y_train)
-    # y_pred = model.predict(X_test)
-
-    #transformed_y_pred = np.expm1(y_pred)
-    # Submitting the file
-    #my_submission = pd.DataFrame({'id': df_test.id, 'price_doc': transformed_y_pred})
-    # you could use any filename. We choose submission here
-    #my_submission.to_csv('predictions/submission_5000_rounds_lr_0.01.csv', index=False) # With cross val RMSE = 0.32543

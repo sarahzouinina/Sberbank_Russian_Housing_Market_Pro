@@ -21,7 +21,8 @@ from sklearn.metrics import r2_score
 
 class AbstractLGBMWrapper(ABC, BaseEstimator):
     """
-    The purpose of this class is to provide a wrapper for a LightGBM model, with cross-validation for finding the best number of rounds.
+    The purpose of this class is to provide a wrapper for a LightGBM model, with cross-validation for finding the best
+    number of rounds.
     """
 
     def __init__(self, params, early_stopping_rounds, custom_eval_function=None, maximize=True, nrounds=10000,

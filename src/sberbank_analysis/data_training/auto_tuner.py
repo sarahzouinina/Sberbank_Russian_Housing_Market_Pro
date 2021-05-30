@@ -75,7 +75,7 @@ class AutoTuner(object):
         """
 
         def objective(params):                        
-            lgb_params = {"objective": "reg:linear",
+            lgb_params = {"objective": "regression",
                           "metric": "rmse",
                           "booster": "gbdt",
                           "num_leaves": int(params["num_leaves"]),
@@ -98,10 +98,10 @@ class AutoTuner(object):
 
             # Make predictions
             predictions_npa = my_model.predict(X_test)
-            predictions_npa = np.expm1(predictions_npa)
+
 
             # Evaluate the model
-            rmse = mean_squared_error(y_test, predictions_npa) ** 0.5
+            rmse = mean_squared_error(y_test, predictions_npa)**0.5
             
             print("RMSE = ", rmse)
 
@@ -154,12 +154,12 @@ class AutoTuner(object):
         # self.hyperparameters_sets_lst = self._generate_random_hyperparameters_sets(hyperparameters_dict)
 
         # Actually do the tuning
-        best, trials = self._tune_model_helper(n_tries, hyperparameters_dict, X_train, y_train)
+        best, trials = self._tune_model_helper(n_tries, model_class, hyperparameters_dict, X_train, y_train, X_test, y_test)
 
         # Generate a DataFrame with results
+        #results_df = pd.concat([results_df, pd.DataFrame(trials.vals, index=results_df.index)], axis=1)  # For LightGBM
+        results_df = pd.DataFrame({"model": ["LGBM"] * len(trials.tids), "iteration": trials.tids,
+                                   "RMSE": [x["loss"] for x in trials.results]})
         results_df = pd.concat([results_df, pd.DataFrame(trials.vals, index=results_df.index)], axis=1)  # For LightGBM
-
-
         results_df.sort_values("RMSE", ascending=True, inplace=True)
-
         return results_df
