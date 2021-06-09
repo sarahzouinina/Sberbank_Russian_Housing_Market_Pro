@@ -1,3 +1,15 @@
+###############################################################################
+# Sberbank Russian Housing Market Challenge                                   #
+#                                                                             #
+# This is the data loader class.                                              #
+# Developed using Python 3.8.                                                 #
+#                                                                             #
+# Author: Sarah Zouinina                                                      #
+# e-mail: sarahzouinina1@gmail.com                                            #
+# Date: 2021-05-10                                                            #
+# Version: 1.0.0                                                              #
+###############################################################################
+
 import pandas as pd
 pd.set_option('display.max_columns', None)
 import numpy as np

@@ -1,22 +1,16 @@
-################################################################################
-# Bristol-Myers Squibb Molecular Translation competition                       #
-#                                                                              #
-# This file contains a class defining a model based on a ResNet encoder and a  #
-# LSTM decoder.                                                                #
-# Developped using Python 3.8.                                                 #
-#                                                                              #
-# Author: Thomas SELECK                                                        #
-# e-mail: thomas.seleck@outlook.fr                                             #
-# Date: 2021-03-14                                                             #
-# Version: 1.0.0                                                               #
-################################################################################
+###############################################################################
+# Sberbank Russian Housing Market Challenge                                   #
+#                                                                             #
+# This is the Sberbank Model, where the magic happens                         #
+# Developped using Python 3.8.                                                #
+#                                                                             #
+# Author: Sarah Zouinina                                                      #
+# e-mail: sarahzouinina1@gmail.com                                            #
+# Date: 2021-05-28                                                            #
+# Version: 1.0.0                                                              #
+###############################################################################
 
 import numpy as np
-import pandas as pd
-import time
-import gc
-import pickle
-
 from src.sberbank_analysis.data_preprocessing.preprocessing_steps import Preprocessor
 from src.sberbank_analysis.data_training.lgbm import LGBMRegressor
 

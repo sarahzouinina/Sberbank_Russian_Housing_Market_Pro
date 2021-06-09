@@ -1,3 +1,16 @@
+###############################################################################
+# Sberbank Russian Housing Market Challenge                                   #
+#                                                                             #
+# The entry point of the solution, with a routine for tuning the hyperparams  #
+# of the model                                                                #
+# Developed using Python 3.8.                                                #
+#                                                                             #
+# Author: Sarah Zouinina                                                      #
+# e-mail: sarahzouinina1@gmail.com                                            #
+# Date: 2021-05-28                                                            #
+# Version: 1.0.0                                                              #
+###############################################################################
+
 import pandas as pd
 import numpy as np
 import logging
@@ -15,6 +28,7 @@ from src.sberbank_analysis.data_training.file_paths import *
 from custom_logging import CustomLogger # CHECK THAT PATH IS OK!
 from datetime import datetime
 from hyperopt import hp
+from src.sberbank_analysis.data_visualization import generate_plots
 
 
 if __name__ == "__main__":
@@ -31,6 +45,7 @@ if __name__ == "__main__":
     train, test = ld.load_data(TRAINING_DATA_str, TESTING_DATA_str)
     df_test = test.copy()
     df_train = train.copy()
+    generate_plots.plot(df_train)
     #ld.display_head(train)
 
 
@@ -38,15 +53,16 @@ if __name__ == "__main__":
 
     cc = feature_selector.Correlation_Checker()
     train, test = cc.transform(train, test)
-    # print(train.shape)
-    # print(test.shape)
+    print(train.shape)
+    print(test.shape)
     
     ################## X_train, y_train ###############################
     target = train['price_doc']
     train = train.drop(['price_doc'], axis = 1)
-    y_log_target= np.log1p(target)
-    
+    y_log_target = np.log1p(target)
+
     X_train, X_test, y_train, y_test = train_test_split(train, y_log_target, test_size = 0.20, random_state = 42)
+
 
     ################# Tuning the Model ####################
     hyperparameters_dict = {"num_leaves": hp.quniform("num_leaves", 8, 128, 2),

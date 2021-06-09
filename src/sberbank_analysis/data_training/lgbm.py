@@ -1,8 +1,8 @@
 ###############################################################################
-# First solution for the Home Credit Default Risk Challenge                   #
+# Sberbank Russian Housing Market Challenge                                   #
 #                                                                             #
-# This is the entry point of the solution.                                    #
-# Developped using Python 3.6.                                                #
+# This is the general LGBM .                                    #
+# Developed using Python 3.6.                                                #
 #                                                                             #
 # Author: Thomas SELECK                                                       #
 # e-mail: thomas.seleck@outlook.fr                                            #
@@ -34,13 +34,15 @@ class AbstractLGBMWrapper(ABC, BaseEstimator):
         params : dictionary
                 This contains the parameters of the LightGBM model.
         early_stopping_rounds : integer
-                This indicates the number of rounds to keep before stopping training when the score doesn't increase. If negative, disable this functionality.
+                This indicates the number of rounds to keep before stopping training when the score doesn't increase.
+                 If negative, disable this functionality.
         verbose_eval : positive integer
                 This indicates the frequency of scores printing. E.g. 50 means one score printed every 50 rounds.
         custom_eval_function : function
                 This is a function LightGBM will use as loss function.
         maximize : boolean
-                Indicates if the function customEvalFunction must be maximized or minimized. Not used when customEvalFunction is None.
+                Indicates if the function customEvalFunction must be maximized or minimized. Not used when
+                customEvalFunction is None.
         nrounds : integer
                 Number of rounds for LightGBM training.
         random_state : zero or positive integer
@@ -48,9 +50,9 @@ class AbstractLGBMWrapper(ABC, BaseEstimator):
         test_size : float between 0 and 1.
                 This indicates the size of the test set.
         verbose_eval : bool or int, optional (default = 1)
-                If True, the eval metric on the valid set is printed at each boosting stage. If int, the eval metric on the valid set is
-                printed at every verbose_eval boosting stage. The last boosting stage or the boosting stage found by using early_stopping_rounds
-                is also printed.
+                If True, the eval metric on the valid set is printed at each boosting stage. If int, the eval metric on
+                 the valid set is printed at every verbose_eval boosting stage. The last boosting stage or the boosting
+                 stage found by using early_stopping_rounds is also printed.
         enable_cv : bool (default = True)
                 If True, the best number of rounds is found using Cross Validation.
 
@@ -76,8 +78,8 @@ class AbstractLGBMWrapper(ABC, BaseEstimator):
     @staticmethod
     def R2(preds, dtrain):
         labels = dtrain.get_label()
-        return "R2", r2_score(labels,
-                              preds) * 100, True  # f(preds: array, dtrain: Dataset) -> name: string, value: array, is_higher_better: bool
+        # f(preds: array, dtrain: Dataset) -> name: string, value: array, is_higher_better: bool
+        return "R2", r2_score(labels, preds) * 100, True
 
     def fit(self, X, y):
         """

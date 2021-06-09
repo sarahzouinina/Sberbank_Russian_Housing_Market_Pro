@@ -1,14 +1,14 @@
-################################################################################
-# Bristol-Myers Squibb Molecular Translation competition                       #
-#                                                                              #
-# This file contains a class defining an auto-tuning system.                   #
+###############################################################################
+# Sberbank Russian Housing Market Challenge                                   #
+#                                                                             #
+# This is the hyperparameters' tuning class                                   #
 # Developed using Python 3.8.                                                 #
-#                                                                              #
-# Author: Thomas SELECK                                                        #
-# e-mail: thomas.seleck@outlook.fr                                             #
-# Date: 2021-03-07                                                             #
-# Version: 1.0.0                                                               #
-################################################################################
+#                                                                             #
+# Author: Sarah Zouinina                                                      #
+# e-mail: sarahzouinina1@gmail.com                                            #
+# Date: 2021-05-15                                                            #
+# Version: 1.0.0                                                              #
+###############################################################################
 
 import numpy as np
 import pandas as pd

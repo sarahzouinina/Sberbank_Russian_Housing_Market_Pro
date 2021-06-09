@@ -1,3 +1,16 @@
+###############################################################################
+# Sberbank Russian Housing Market Challenge                                   #
+#                                                                             #
+# This is the data Preprocessor                                               #
+# Developed using Python 3.8.                                                #
+#                                                                             #
+# Author: Sarah Zouinina                                                      #
+# e-mail: sarahzouinina1@gmail.com                                            #
+# Date: 2021-05-05                                                            #
+# Version: 1.0.0                                                              #
+###############################################################################
+
+
 from sklearn.base import TransformerMixin, BaseEstimator
 import pandas as pd
 import numpy as np
@@ -32,14 +45,6 @@ class Preprocessor(TransformerMixin, BaseEstimator):
         -------
         None
         """
-        # Get features with NA
-        # self.features_with_na = [feature for feature in X.columns if X[feature].isnull().sum() > 1]
-        #
-        # # Get categorical features
-        # self.categorical_features = [feature for feature in X.columns if X[feature].dtype == 'O']
-        #
-        # # Get numerical features
-        # self.numerical_features = [feature for feature in X.columns if X[feature].dtype != 'O']
         return self
 
     def transform(self, X):
@@ -97,6 +102,8 @@ class Preprocessor(TransformerMixin, BaseEstimator):
             df['kitch_sq'] = df['kitch_sq'].replace([620., 1970., 1974., 2013., 2014.],
                                                     [62.0, 197.0, 197.4, 201.3, 201.4])
             df['material'].iloc[df['material'] == 3] = 6
+            df['num_room'].loc[df['num_room'] == 19] = 9
+            df['num_room'].loc[df['num_room'] == 17] = 7
             return df
 
         X = RemoveOutliers(X)
@@ -107,15 +114,17 @@ class Preprocessor(TransformerMixin, BaseEstimator):
             df["living_area"] = df['full_sq'] - df['life_sq']
             df["percentage_living_area"] = df['life_sq'] / df['full_sq']
             df["room_area_average"] = df["living_area"] / df["num_room"]
-            df["age_of_property"] = df["sold_year"] - df["build_year"]
+            df["age_of_property"] = abs(df["sold_year"] - df["build_year"])
             df['binned_build_year'] = pd.cut(X['build_year'], bins=bin_interval, labels=bin_labels)
             # how many people in m?
             df['area_by_person'] = df['area_m'] / df['raion_popul']
             # get the green area in the neighborhood
             df['green_area_m'] = df['green_zone_part'] * df['area_m']
+
             return df
 
         X = create_new_features(X)
+        X = X.drop(["0_6_all", "7_14_all"], axis=1, inplace=True)
 
 
         def DimensionalityReduction(df):
